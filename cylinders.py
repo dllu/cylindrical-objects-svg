@@ -16,23 +16,6 @@ THINGS = {
     'Hockey Puck': ({
         'rubber': (0.15, 0.15, 0.15, 0)
     }, [(38.1, 38.1, 25.4, 'rubber')], 170),
-    #'Test cone': ({
-    #'magenta': (1, 0, 1, 0.5)
-    #}, [(50, 100, 100, 'magenta')], 100),
-    #'Test cone 2': ({
-    #'magenta': (1, 0, 1, 0.5)
-    #}, [(100, 50, 100, 'magenta')], 100),
-    #'Ouster OS-1 (2016)': ({
-    #'body': (0.14, 0.14, 0.14, 0.3),
-    #'orange': (1, 0.3, 0.0, 0.7),
-    #'window': (0.1, 0.1, 0.1, 0.9)
-    #}, [
-    #(35, 35, 2, 'body'),
-    #(35, 35, 31, 'window'),
-    #(35, 35, 1, 'orange'),
-    #(35, 37, 12, 'body'),
-    #(37, 37, 5, 'body'),
-    #], 330),
     'Coca-Cola': ({
         'aluminium': (0.88, 0.88, 0.88, 0.5),
         'body': (1, 0, 0, 0.8),
@@ -142,18 +125,6 @@ THINGS = {
         (79, 81, 67.0, 'window'),
         (82, 82.5, 33.0, 'body'),
     ], 3530),
-    #'Traffic cone': ({
-    #'orange': (1, 0.4, 0, 0.4),
-    #'reflector': (0.9, 0.9, 0.9, 0.7)
-    #}, [
-    #(30, 75 / 700 * 150 + 30, 75, 'orange'),
-    #(75 / 700 * 150 + 30, 225 / 700 * 150 + 30, 150, 'reflector'),
-    #(225 / 700 * 150 + 30, 275 / 700 * 150 + 30, 50, 'orange'),
-    #(275 / 700 * 150 + 30, 375 / 700 * 150 + 30, 100, 'reflector'),
-    #(375 / 700 * 150 + 30, 180, 325, 'orange'),
-    #(180, 250, 5, 'orange'),
-    #(250, 250, 15, 'orange'),
-    #], 3200),
 }
 
 PATH = '<path d="{d}" style="fill:url(#{material})" transform="{transform}"/>'
@@ -231,7 +202,6 @@ def render_revolve(materials, geometry, angle=0.1):
         large2 = 1 - large1
 
         hypot = h * sin_angle / cos_angle
-        sin_theta = (rx2 - rx1) / hypot
         if hypot < abs(rx2 - rx1):
             last_ellipse = ELLIPSE.format(cx=0,
                                           cy=0,
@@ -241,10 +211,8 @@ def render_revolve(materials, geometry, angle=0.1):
                                               h_offset, v_offset),
                                           material=mat + key + '-solid')
             continue
+        sin_theta = (rx2 - rx1) / hypot
         cos_theta = math.sqrt(1 - sin_theta**2)
-        # theta = math.asin(sin_angle * (rx2 - rx1) / h)
-        # sin_theta = math.sin(theta)
-        # cos_theta = math.cos(theta)
 
         x1 = rx1 * cos_theta
         y1 = -rx1 * sin_theta * cos_angle
@@ -260,11 +228,6 @@ def render_revolve(materials, geometry, angle=0.1):
             rx2=rx2, ry2=ry2, large2=large2, sweep=0, x2=x2, y2=y2)
         d += 'Z'
 
-        #svg += ELLIPSE.format(
-        #cx=0,cy=0,
-        #rx=rx2, ry=ry2,
-        #transform='translate({}, {})'.format(h_offset, v_offset + h * sin_angle),
-        #material=mat + key)
         if last_rx1 != -1 and not rx2 == last_rx1:
             svg += last_ellipse
         svg += PATH.format(d=d,
