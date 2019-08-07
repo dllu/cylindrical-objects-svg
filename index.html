@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    outline: 0;
+    border: 0;
+}
+#container {
+    height: 324px;
+    width: 100vw;
+    overflow-y: hidden;
+    overflow-x: auto;
+}
+#cylinders {
+    display: block;
+    margin: 0 auto;
+    transform: translate(0, -3240px);
+}
+#slider {
+    display: block;
+    margin: 0 auto;
+    width: 1649px;
+}
+</style>
+<div id="container">
+<img src="cylinders.svg" id="cylinders">
+</div>
+<input type="range" min="0" max="74" value="10" id="slider">
+<script>
+    document.getElementById('slider').oninput = function() {
+        var y = -this.value * 324;
+        document.getElementById('cylinders').style.transform = 
+            'translate(0,' + y + 'px)';
+        console.log(this.value);
+    };
+</script>
+</html>
