@@ -1,6 +1,7 @@
 #!/usr/bin/env python
+import math
 """
-each thing is a tuple of materials, geometry, where:
+each thing is a tuple of materials, geometry, weight where:
     materials is a dict of:
         name: (r, g, b, glossiness)
         where name is a string,
@@ -9,11 +10,29 @@ each thing is a tuple of materials, geometry, where:
     geometry is a list of:
         (start radius, end radius, height, material)
         in millimetres
+    weight is in grams
 """
 THINGS = {
     'Hockey Puck': ({
         'rubber': (0.15, 0.15, 0.15, 0)
-    }, [(38.1, 38.1, 25.4, 'rubber')]),
+    }, [(38.1, 38.1, 25.4, 'rubber')], 170),
+    #'Test cone': ({
+        #'magenta': (1, 0, 1, 0.5)
+    #}, [(50, 100, 100, 'magenta')], 100),
+    #'Test cone 2': ({
+        #'magenta': (1, 0, 1, 0.5)
+    #}, [(100, 50, 100, 'magenta')], 100),
+    'Ouster OS-1 (2016)': ({
+        'body': (0.14, 0.14, 0.14, 0.3),
+        'orange': (1, 0.3, 0.0, 0.7),
+        'window': (0.1, 0.1, 0.1, 0.9)
+    }, [
+        (35, 35, 2, 'body'),
+        (35, 35, 31, 'window'),
+        (35, 35, 1, 'orange'),
+        (35, 37, 12, 'body'),
+        (37, 37, 5, 'body'),
+    ], 330),
     'Ouster OS1': ({
         'body': (0.88, 0.88, 0.88, 0.3),
         'window': (0.1, 0.1, 0.1, 0.9)
@@ -23,7 +42,7 @@ THINGS = {
         (35, 35, 31, 'window'),
         (35, 40, 14, 'body'),
         (40, 40, 6, 'body'),
-    ]),
+    ], 396),
     'Velodyne VLP-16': ({
         'body': (0.8, 0.8, 0.83, 0.1),
         'window': (0.1, 0.5, 0, 0.9)
@@ -31,7 +50,7 @@ THINGS = {
         (49.5, 50, 14.8, 'body'),
         (49.5, 51, 38.1, 'window'),
         (51.5, 51.65, 18.8, 'body'),
-    ]),
+    ], 830),
     'Velodyne VLP-32C': ({
         'body': (0.8, 0.8, 0.83, 0.1),
         'window': (0.1, 0.5, 0, 0.9)
@@ -39,7 +58,7 @@ THINGS = {
         (50, 50, 27.4, 'body'),
         (49.5, 51, 44.5, 'window'),
         (51.5, 51.65, 15.0, 'body'),
-    ]),
+    ], 925),
     'Quanergy M8': ({
         'body': (0.1, 0.1, 0.1, 0.7),
         'window': (0.1, 0.1, 0.1, 0.95),
@@ -51,15 +70,15 @@ THINGS = {
         (50, 51, 1, 'body'),
         (51, 51, 10, 'body'),
         (51.5, 51.5, 8, 'base'),
-    ]),
-    'Surestar RFans-32': ({
+    ], 900),
+    'SureStar RFans-32': ({
         'body': (0.7, 0.7, 0.75, 0.0),
         'window': (0.85, 0.87, 0.8, 0.95)
     }, [
         (56.5, 56.5, 10, 'body'),
         (56.5, 56.5, 44, 'window'),
         (56.5, 56.5, 16, 'body'),
-    ]),
+    ], 738),
     'Ouster OS2': ({
         'body': (0.88, 0.88, 0.88, 0.3),
         'window': (0.1, 0.1, 0.1, 0.9)
@@ -68,7 +87,17 @@ THINGS = {
         (46, 49, 66, 'window'),
         (50, 55, 20, 'body'),
         (55, 55, 8, 'body'),
-    ]),
+    ], 600),
+    'Robosense RS-LiDAR-16': ({
+        'body': (0.4, 0.4, 0.4, 0.0),
+        'window': (0, 0.2, 0.6, 0.95)
+    }, [
+        (54.5, 54.5, 16, 'body'),
+        (54, 54, 4, 'body'),
+        (53.5, 54, 45, 'window'),
+        (54, 54, 3, 'body'),
+        (54.5, 54.5, 12, 'body'),
+    ], 840),
     'Robosense RS-LiDAR-32B': ({
         'body': (0.4, 0.4, 0.4, 0.0),
         'window': (0, 0.2, 0.6, 0.95)
@@ -76,7 +105,7 @@ THINGS = {
         (57, 57, 33, 'body'),
         (56, 55, 65, 'window'),
         (56, 56, 20, 'body'),
-    ]),
+    ], 1130),
     'Hesai Pandar64': ({
         'body': (0.8, 0.83, 0.8, 0.7),
         'window': (0, 0.2, 0.6, 0.95)
@@ -85,7 +114,7 @@ THINGS = {
         (58, 58, 30, 'body'),
         (57.5, 57, 62, 'window'),
         (57.5, 57.5, 20, 'body'),
-    ]),
+    ], 1520),
     'Velodyne VLS-128': ({
         'body': (0.9, 0.9, 0.9, 0.1),
         'window': (0.0, 0.0, 0.4, 0.95)
@@ -99,64 +128,128 @@ THINGS = {
         (80.5, 81, 21, 'body'),
         (79, 81, 67.0, 'window'),
         (82, 82.5, 33.0, 'body'),
-    ]),
+    ], 3530),
+    #'Traffic cone': ({
+        #'orange': (1, 0.4, 0, 0.4),
+        #'reflector': (0.9, 0.9, 0.9, 0.7)
+    #}, [
+        #(30, 75 / 700 * 150 + 30, 75, 'orange'),
+        #(75 / 700 * 150 + 30, 225 / 700 * 150 + 30, 150, 'reflector'),
+        #(225 / 700 * 150 + 30, 275 / 700 * 150 + 30, 50, 'orange'),
+        #(275 / 700 * 150 + 30, 375 / 700 * 150 + 30, 100, 'reflector'),
+        #(375 / 700 * 150 + 30, 180, 325, 'orange'),
+        #(180, 250, 5, 'orange'),
+        #(250, 250, 15, 'orange'),
+    #], 3200),
 }
 
 PATH = '<path d="{d}" style="fill:url(#{material})" transform="{transform}"/>'
+ELLIPSE = '<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" style="fill:url(#{material})" transform="{transform}"/>'
 GROUP = '<g transform="{transform}">{group}</g>'
+SOLIDCOLOR = """\
+<linearGradient id="{id}-solid" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" style="stop-color:rgb{c0}" />
+</linearGradient>\
+"""
+
 GRADIENT = """\
 <linearGradient id="{id}" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%" style="stop-color:rgb{c0};stop-opacity:1" />
-    <stop offset="{s1}%" style="stop-color:rgb{c1};stop-opacity:1" />
-    <stop offset="{s2}%" style="stop-color:rgb{c2};stop-opacity:1" />
-    <stop offset="{s3}%" style="stop-color:rgb{c3};stop-opacity:1" />
-    <stop offset="{s4}%" style="stop-color:rgb{c4};stop-opacity:1" />
-    <stop offset="{s5}%" style="stop-color:rgb{c5};stop-opacity:1" />
-    <stop offset="100%" style="stop-color:rgb{c6};stop-opacity:1" />
+    <stop offset="0%" style="stop-color:rgb{c0}" />
+    <stop offset="{s1}%" style="stop-color:rgb{c1}" />
+    <stop offset="{s2}%" style="stop-color:rgb{c2}" />
+    <stop offset="{s3}%" style="stop-color:rgb{c3}" />
+    <stop offset="{s4}%" style="stop-color:rgb{c4}" />
+    <stop offset="{s5}%" style="stop-color:rgb{c5}" />
+    <stop offset="100%" style="stop-color:rgb{c6}" />
 </linearGradient>\
 """
 SVG = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="{width}px" height="{height}px">{svg}</svg>'
-TEXT = '<text x="{x}" y="{y}" style="font: {size}px sans-serif;">{text}</text>'
+TEXT = '<text x="{x}" y="{y}" style="font: {size}px monospace;">{text}</text>'
 
+
+def rgb(colour, mult, add=0):
+    return tuple(min(255, 255 * (c * mult + add)) for c in colour[0:3])
 
 def render_materials(materials, key):
-    def rgb(colour, mult, add=0):
-        return tuple(min(255, 255 * (c * mult + add)) for c in colour[0:3])
-
     material_svg = '<defs>{}</defs>'.format(''.join(
-        GRADIENT.format(id=k + key,
-                        c0=rgb(v, 0.3 - 0.2 * v[3]),
-                        c1=rgb(v, 0.7),
-                        c2=rgb(v, 1.0, 0.2 * v[3]),
-                        c3=rgb(v, 1.2, 0.25 * v[3]),
-                        c4=rgb(v, 1.1, 0.2 * v[3]),
-                        c5=rgb(v, 0.8),
-                        c6=rgb(v, 0.6 - 0.2 * v[3]),
-                        s1=52 - 10 * (1 - v[3]),
-                        s2=52 + 10 * (1 - v[3]),
-                        s3=70,
-                        s4=88 - 10 * (1 - v[3]),
-                        s5=88 + 10 * (1 - v[3]))
+        '{}{}'.format(
+            GRADIENT.format(id=k + key,
+                            c0=rgb(v, 0.3 - 0.2 * v[3]),
+                            c1=rgb(v, 0.7),
+                            c2=rgb(v, 1.0, 0.2 * v[3]),
+                            c3=rgb(v, 1.2, 0.25 * v[3]),
+                            c4=rgb(v, 1.1, 0.2 * v[3]),
+                            c5=rgb(v, 0.8),
+                            c6=rgb(v, 0.6 - 0.2 * v[3]),
+                            s1=52 - 10 * (1 - v[3]),
+                            s2=52 + 10 * (1 - v[3]),
+                            s3=70,
+                            s4=88 - 10 * (1 - v[3]),
+                            s5=88 + 10 * (1 - v[3])),
+            SOLIDCOLOR.format(id=k + key,
+                c0=rgb(v,1)
+            ))
         for k, v in materials.items()))
     return material_svg
 
 
-def render_revolve(materials, geometry, angle):
+def render_revolve(materials, geometry, angle=1):
     if angle == 0:
         return render_flat(materials, geometry)
-    return
 
-    v_offset = 0
+    cos_angle = math.cos(angle)
+    sin_angle = math.sin(angle)
+
+    key = str(hash('{}'.format(geometry)))
     h_offset = max(max(r1, r2) for r1, r2, _, _ in geometry)
-    svg = render_materials(materials)
-    for x1, x2, h, mat in geometry[::-1]:
+    height = v_offset = sum(h * sin_angle for _, _, h, _ in geometry) + h_offset * cos_angle
+    svg = render_materials(materials, key)
+
+    for rx1, rx2, h, mat in geometry[::-1]:
+        v_offset -= h * sin_angle
+        ry1 = cos_angle * rx1
+        ry2 = cos_angle * rx2
+        large1 = 0
+        if rx1 < rx2:
+            large1 = 1
+        large2 = 1 - large1
+
+        hypot = h * sin_angle / cos_angle
+        sin_theta = (rx2 - rx1) / hypot
+        if hypot < abs(rx2 - rx1):
+            continue
+        cos_theta = math.sqrt(1 - sin_theta**2)
+        # theta = math.asin(sin_angle * (rx2 - rx1) / h)
+        # sin_theta = math.sin(theta)
+        # cos_theta = math.cos(theta)
+
+        x1 = rx1 * cos_theta
+        y1 = -rx1 * sin_theta * cos_angle
+
+        x2 = rx2 * cos_theta
+        y2 = h * sin_angle + -rx2 * sin_theta * cos_angle
+
+        d = 'M{x1},{y1}'.format(x1=x1, y1=y1)
+        d += 'A{rx1},{ry1},0,{large1},{sweep},{x1},{y1}'.format(rx1=rx1, ry1=ry1, large1=large1, sweep=1, x1=-x1, y1=y1)
+        d += 'L{x2},{y2}'.format(x2=-x2, y2=y2)
+        d += 'A{rx2},{ry2},0,{large2},{sweep},{x2},{y2}'.format(rx2=rx2, ry2=ry2, large2=large1, sweep=0, x2=x2, y2=y2)
+        d += 'Z'
+
+        #svg += ELLIPSE.format(
+                #cx=0,cy=0,
+                #rx=rx2, ry=ry2,
+                #transform='translate({}, {})'.format(h_offset, v_offset + h * sin_angle),
+                #material=mat + key)
         svg += PATH.format(
-            d='A{x1},{y1},0,0,{l1}, L-{x1},{y1} L-{x2},{y2} L{x2},{y2} L{x1},{y1}'
-            .format(x1=x1, x2=x2, y1=v_offset, y2=v_offset + h),
-            transform='translate({}, 0)'.format(h_offset),
-            material=mat)
-        v_offset += h
-    return svg, v_offset, 2 * h_offset
+            d=d,
+            transform='translate({}, {})'.format(h_offset, v_offset),
+            material=mat + key)
+        svg += ELLIPSE.format(
+                cx=0,cy=0,
+                rx=rx1, ry=ry1,
+                transform='translate({}, {})'.format(h_offset, v_offset),
+                material=mat + key + '-solid')
+    return svg, height + h_offset * cos_angle, 2 * h_offset
 
 
 def render_flat(materials, geometry):
@@ -166,7 +259,7 @@ def render_flat(materials, geometry):
     svg = render_materials(materials, key)
     for x1, x2, h, mat in geometry:
         svg += PATH.format(
-            d='M{x1},{y1} L-{x1},{y1} L-{x2},{y2} L{x2},{y2} L{x1},{y1}'.
+            d='M{x1},{y1} L-{x1},{y1} L-{x2},{y2} L{x2},{y2} Z'.
             format(x1=x1, x2=x2, y1=v_offset - 0.5, y2=v_offset + h),
             transform='translate({}, 0)'.format(h_offset),
             material=mat + key)
@@ -174,29 +267,30 @@ def render_flat(materials, geometry):
     return svg, v_offset, 2 * h_offset
 
 
-def render_all(things, renderer, padding=20, textsize=10):
-    renders = {k: renderer(*thing) for k, thing in things.items()}
+def render_all(things, renderer, padding=30, textsize=8):
+    renders = {k: (renderer(*thing[0:2]), thing[2]) for k, thing in things.items()}
 
-    total_height = 2 * padding + max(v[1] for _, v in renders.items())
+    total_height = 2 * padding + max(v[0][1] for _, v in renders.items())
     h_offset = padding
 
     svg = ''
     for k, v in renders.items():
-        render, height, width = v
+        render, height, width = v[0]
         svg += GROUP.format(transform='translate({x},{y})'.format(
             x=h_offset, y=total_height - height - padding),
                             group=render)
         svg += TEXT.format(x=h_offset, y=total_height, text=k, size=textsize)
+        svg += TEXT.format(x=h_offset, y=total_height + textsize, text='{} g'.format(v[1]), size=textsize)
         h_offset += width + padding
 
     print(
         SVG.format(svg=svg,
-                   height=total_height + padding + textsize,
+                   height=total_height + padding + 2 * textsize,
                    width=h_offset))
 
 
 def main():
-    render_all(THINGS, render_flat)
+    render_all(THINGS, render_revolve)
 
 
 main()
