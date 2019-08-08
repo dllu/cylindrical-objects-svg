@@ -308,4 +308,5 @@ def main():
     print(SVG.format(svg=svg, height=each_height * len(all_svg), width=width))
 
 
-main()
+if __name__ == '__main__':
+    main()
