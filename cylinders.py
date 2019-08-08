@@ -289,7 +289,7 @@ def render_all(things, renderer, padding=30, textsize=8):
 def main():
     all_svg = []
     all_height = []
-    for a in range(0, 150, 2):
+    for a in range(0, 150, 5):
         angle = a / 100
         svg, height, width = render_all(
             THINGS, lambda x, y: render_revolve(x, y, angle))

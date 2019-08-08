@@ -1,5 +1,7 @@
 <!doctype html>
 <html lang="en">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 * {
     margin: 0;
@@ -22,12 +24,13 @@
     display: block;
     margin: 0 auto;
     width: 1649px;
+    max-width: 100vw;
 }
 </style>
 <div id="container">
 <img src="cylinders.svg" id="cylinders">
 </div>
-<input type="range" min="0" max="74" value="10" id="slider">
+<input type="range" min="0" max="29" value="10" id="slider">
 <script>
     document.getElementById('slider').oninput = function() {
         var y = -this.value * 324;
